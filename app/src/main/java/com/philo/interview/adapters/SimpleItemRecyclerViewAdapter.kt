@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.philo.interview.DataProviders.FragmentDescriptorData
 import com.philo.interview.R
-import com.philo.interview.fragments.ItemDetailFragment
+import com.philo.interview.fragments.StarWarsDirectoryFragment
 import com.philo.interview.interfaces.RecyclerAdapterInterface
 import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.item_list_content.view.*
@@ -36,8 +36,7 @@ class SimpleItemRecyclerViewAdapter(
         onClickListener = View.OnClickListener { v ->
             publishSubject.onNext(
                 FragmentDescriptorData(
-                    (v.tag as String),
-                    ItemDetailFragment.fragmentId
+                    StarWarsDirectoryFragment.fragmentId
                 )
             )
         }

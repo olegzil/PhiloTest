@@ -6,7 +6,7 @@ import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
 import com.philo.interview.R
-import com.philo.interview.fragments.ItemDetailFragment
+import com.philo.interview.fragments.StarWarsDirectoryFragment
 import kotlinx.android.synthetic.main.activity_item_detail.*
 import timber.log.Timber
 
@@ -16,7 +16,7 @@ import timber.log.Timber
  * item details are presented side-by-side with a list of items
  * in a [MainActivity].
  */
-class ItemDetailActivity : AppCompatActivity() {
+class StarWarsDirectoryActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,11 +45,11 @@ class ItemDetailActivity : AppCompatActivity() {
         } ?: let {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
-            val fragment = ItemDetailFragment().apply {
+            val fragment = StarWarsDirectoryFragment().apply {
                 arguments = Bundle().apply {
                     putString(
-                        ItemDetailFragment.fragmentId,
-                        intent.getStringExtra(ItemDetailFragment.fragmentId)
+                        StarWarsDirectoryFragment.fragmentId,
+                        intent.getStringExtra(StarWarsDirectoryFragment.fragmentId)
                     )
                 }
             }

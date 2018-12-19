@@ -4,14 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.RecyclerView
 import com.philo.interview.BuildConfig
 import com.philo.interview.DataProviders.FragmentDescriptorData
 import com.philo.interview.Logging.NotLoggingTree
 import com.philo.interview.R
-import com.philo.interview.adapters.SimpleItemRecyclerViewAdapter
-import com.philo.interview.fragments.ItemDetailFragment
-import io.reactivex.disposables.Disposables
+import com.philo.interview.fragments.StarWarsDirectoryFragment
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableObserver
 import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.activity_item_list.*
@@ -19,18 +17,19 @@ import kotlinx.android.synthetic.main.item_list.*
 import timber.log.Timber
 import timber.log.Timber.DebugTree
 
+val fragmentNotifier = PublishSubject.create<FragmentDescriptorData>()
 
 /**
  * An activity representing a list of Pings. This activity
  * has different presentations for handset and tablet-size devices. On
  * handsets, the activity presents a list of items, which when touched,
- * lead to a [ItemDetailActivity] representing
+ * lead to a [StarWarsDirectoryActivity] representing
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
 class MainActivity : AppCompatActivity() {
-    private val fragmentNotifier = PublishSubject.create<FragmentDescriptorData>()
-    private var disposable = Disposables.disposed()
+    private var compositeDisposable = CompositeDisposable()
+
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
@@ -62,8 +61,20 @@ class MainActivity : AppCompatActivity() {
             // If this view is present, then the
             // activity should be in two-pane mode.
             twoPane = true
+            startFragmentActivityBasedOnId(FragmentDescriptorData(StarWarsDirectoryActivity.activityId))
         }
-        disposable = fragmentNotifier.subscribeWith(object : DisposableObserver<FragmentDescriptorData>() {
+        else
+            addFragmentBasedOnId(FragmentDescriptorData(StarWarsDirectoryFragment.fragmentId))
+        initiateNotificationMonitoring()
+    }
+
+    override fun onPause() {
+        compositeDisposable.clear()
+        super.onPause()
+    }
+
+    private fun initiateNotificationMonitoring() {
+        compositeDisposable.add(fragmentNotifier.subscribeWith(object : DisposableObserver<FragmentDescriptorData>() {
             override fun onComplete() {
                 // Do nothing
             }
@@ -79,18 +90,17 @@ class MainActivity : AppCompatActivity() {
             override fun onError(e: Throwable) {
                 Timber.e(e)
             }
-        })
-        setupRecyclerView(item_list)
+        }))
     }
 
     private fun addFragmentBasedOnId(payLoad: FragmentDescriptorData) {
         when (payLoad.id) {
-            ItemDetailFragment.fragmentId -> {
+            StarWarsDirectoryFragment.fragmentId -> {
                 supportFragmentManager
                     .beginTransaction()
                     .replace(
                         R.id.item_detail_container,
-                        ItemDetailFragment.newInstance(payLoad.fragmentExtraData),
+                        StarWarsDirectoryFragment.newInstance(),
                         payLoad.id
                     )
                     .commit()
@@ -100,15 +110,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun startFragmentActivityBasedOnId(payLoad: FragmentDescriptorData) {
         when (payLoad.id) {
-            ItemDetailFragment.fragmentId -> {
-                applicationContext.startActivity(Intent(applicationContext, ItemDetailActivity::class.java).apply {
-                    putExtra(ItemDetailActivity.activityId, payLoad.fragmentExtraData)
-                })
+            StarWarsDirectoryFragment.fragmentId -> {
+                applicationContext.startActivity(Intent(applicationContext, StarWarsDirectoryActivity::class.java))
             }
         }
-    }
-
-    private fun setupRecyclerView(recyclerView: RecyclerView) {
-        recyclerView.adapter = SimpleItemRecyclerViewAdapter(fragmentNotifier)
     }
 }
