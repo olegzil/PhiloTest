@@ -36,6 +36,7 @@ class RetrofitNetworkService(headerInitializer: NetworkServiceInitializer) {
                 .client(httpClient.build())
                 .build()
         }
+        val r = retrofit?.create<NetworkApiInterface>(NetworkApiInterface::class.java)
         return retrofit
     }
 

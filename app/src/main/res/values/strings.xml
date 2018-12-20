@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">Philo</string>
     <string name="title_item_detail">Item Detail</string>
-    <string name="title_directory">List of StarWars Characters</string>
+    <string name="title_directory">StarWars!</string>
 </resources>

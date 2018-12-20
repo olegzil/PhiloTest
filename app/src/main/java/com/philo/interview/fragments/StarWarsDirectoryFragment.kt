@@ -2,24 +2,27 @@ package com.philo.interview.fragments
 
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.content.ContextCompat
+import android.support.v7.widget.DefaultItemAnimator
+import android.support.v7.widget.DividerItemDecoration
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.philo.interview.DataProviders.StarWarsPerson
+import android.widget.ProgressBar
+import com.philo.interview.DataProviders.ItemDetailDescriptor
 import com.philo.interview.R
-import com.philo.interview.Server.NetworkServiceInitializer
-import com.philo.interview.Server.RetrofitNetworkService
-import com.philo.interview.activities.fragmentNotifier
-import com.philo.interview.utilities.populateDirecotry
-import com.philo.interview.utilities.populatePersonData
-import com.philo.interview.utilities.printLog
-import io.reactivex.Single
+import com.philo.interview.adapters.SimpleItemRecyclerViewAdapter
+import com.philo.interview.datacontrollers.RequestStarWarsDirectory
+import com.philo.interview.lambdas.subsriber
+import com.philo.interview.utilities.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.observers.DisposableSingleObserver
+import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.activity_item_detail.*
-import kotlinx.android.synthetic.main.item_detail.view.*
+import io.reactivex.subjects.PublishSubject
+
 /**
  * A fragment representing a single Item detail screen.
  * This fragment is either contained in a [MainActivity]
@@ -27,69 +30,173 @@ import kotlinx.android.synthetic.main.item_detail.view.*
  * on handsets.
  */
 class StarWarsDirectoryFragment : Fragment() {
-
-    private var item: String? = null
-    private val server = RetrofitNetworkService(NetworkServiceInitializer("https://swapi.co/api/"))
-
+    private val recyclerDispatcher = PublishSubject.create<ItemDetailDescriptor>()
     private val compositeDisposable = CompositeDisposable()
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        fragmentNotifier
-        arguments?.let { bundle ->
-            if (bundle.containsKey(fragmentId)) {
-                // Load the dummy content specified by the fragment
-                // arguments. In a real-world scenario, use a Loader
-                // to load content from a content provider.
-                bundle.getString(StarWarsDirectoryFragment.fragmentId)?.let { title ->
-                    item = title
-                    activity?.toolbar_layout?.title = item
-                }
-            }
-        }
+    private lateinit var mRecyclerView: RecyclerView
+    private lateinit var mProgressBar: ProgressBar
+
+    enum class DataDetailIdentifiers {
+        STRWARSSPECIES,
+        STARWARSSPECIESDETAIL,
+        STARWARSVEHICLES,
+        STARWARSVEHICLESDETAIL,
+        STARWARSPERSONS,
+        STARWARSPERSONDETAIL,
+        STARWARSPLANETS,
+        STARWARSPLANETDETAIL,
+        STARWARSSTARSHIPS,
+        STARWARSSTARSHIPSDETAIL,
+        STARWARSDIRECTORYITEM,
+        STARWARSFILM
+    }
+
+    override fun onPause() {
+        super.onPause()
+        compositeDisposable.clear()
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val rootView = inflater.inflate(R.layout.item_detail, container, false)
-        requestDirectoryDataFromServer()?.run {
-            subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableSingleObserver<List<StarWarsPerson>>() {
-                    override fun onSuccess(characterList: List<StarWarsPerson>) {
-                        item?.let {
-                            rootView.item_detail.text = getString(R.string.title_directory)
-                        }
-                    }
-                    override fun onError(e: Throwable) {
-                        printLog("failed to retrieve string")
-                    }
-                })
-        }
-        return rootView
+        val view = inflater.inflate(R.layout.item_list, container, false)
+        initializeFragment(view)
+        return view
     }
 
-    private fun requestDirectoryDataFromServer(): Single<List<StarWarsPerson>>? {
-        return server.getApi()?.fetchData(" ")?.run {
-            flatMap { jsonData ->
-                val directory = populateDirecotry(jsonData)
-                if (directory != null)
-                    Single.just(directory)
-                else
-                    Single.never()
-            }
-                .flatMap { starwarsDirectory ->
-                    server.getApi()?.fetchData(starwarsDirectory.peopleUrl)
-                }
-                .flatMap { jsonCharacters ->
-                    val characters = populatePersonData(jsonCharacters)
-                    if (characters != null)
-                        Single.just(characters)
-                    else
-                        Single.never()
+    private fun initializeFragment(view: View) {
+        view.let { recyclerView ->
+            mRecyclerView = recyclerView.findViewById(R.id.recycler_view)
+            mProgressBar = recyclerView.findViewById(R.id.progressbar)
+            val mLayoutManager = LinearLayoutManager(context)
+            mRecyclerView.layoutManager = mLayoutManager
+            mRecyclerView.itemAnimator = DefaultItemAnimator()
+            mRecyclerView.adapter = SimpleItemRecyclerViewAdapter(recyclerDispatcher)
+            val divider = DividerItemDecoration(recyclerView.context, DividerItemDecoration.VERTICAL)
+            divider.setDrawable(ContextCompat.getDrawable(context!!, R.drawable.custom_devider)!!)
+            mRecyclerView.addItemDecoration(divider)
+            dispatchItemDetailHandler()
+        }
+    }
+
+    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        (fetchJsonDataFromServerItem("https://swapi.co/api/") { jsonData -> populateDirecotry(jsonData) })?.run {
+            compositeDisposable.add(
+                subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribeWith(RequestStarWarsDirectory(mRecyclerView.adapter as SimpleItemRecyclerViewAdapter))
+            )
+        }
+
+    }
+
+    private fun dispatchItemDetailHandler() {
+        val progress: (Boolean) -> Unit = { flag ->
+            mProgressBar.run {
+                    if (flag) {
+                        visibility = View.VISIBLE
+                    }
+                    else {
+                        visibility = View.INVISIBLE
+                    }
                 }
         }
+        compositeDisposable.add(
+            recyclerDispatcher
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<ItemDetailDescriptor>() {
+                    override fun onComplete() {}
+
+                    override fun onNext(itemDescriptor: ItemDetailDescriptor) {
+                        val adapter = mRecyclerView.adapter as SimpleItemRecyclerViewAdapter
+                        when (itemDescriptor.selector) {
+                            DataDetailIdentifiers.STARWARSPERSONS ->
+                                (fetchJsonDataFromServerList(itemDescriptor.payload as String) { jsonData ->
+                                    populatePersonData(jsonData)
+                                })?.run {
+                                    subsriber(
+                                        progress,
+                                        mRecyclerView,
+                                        compositeDisposable,
+                                        itemDescriptor.selector,
+                                        { container -> container.name },
+                                        this
+                                    )
+                                }
+                            DataDetailIdentifiers.STARWARSPLANETS -> (fetchJsonDataFromServerList(
+                                itemDescriptor.payload as String
+                            ) { jsonData ->
+                                populatePlanetList(
+                                    jsonData
+                                )
+                            })?.run {
+                                subsriber(
+                                    progress,
+                                    mRecyclerView,
+                                    compositeDisposable,
+                                    itemDescriptor.selector,
+                                    { container -> container.name },
+                                    this
+                                )
+                            }
+                            DataDetailIdentifiers.STARWARSSTARSHIPS -> (fetchJsonDataFromServerList(
+                                itemDescriptor.payload as String
+                            ) { jsonData ->
+                                populateStarshipData(
+                                    jsonData
+                                )
+                            })?.run {
+                                subsriber(
+                                    progress,
+                                    mRecyclerView,
+                                    compositeDisposable,
+                                    itemDescriptor.selector,
+                                    { container -> container.name },
+                                    this
+                                )
+                            }
+                            DataDetailIdentifiers.STARWARSVEHICLES -> (fetchJsonDataFromServerList(
+                                itemDescriptor.payload as String
+                            ) { jsonData ->
+                                populateVehicleList(
+                                    jsonData
+                                )
+                            })?.run {
+                                subsriber(
+                                    progress,
+                                    mRecyclerView,
+                                    compositeDisposable,
+                                    itemDescriptor.selector,
+                                    { container -> container.name },
+                                    this
+                                )
+                            }
+                            DataDetailIdentifiers.STRWARSSPECIES -> (fetchJsonDataFromServerList(
+                                itemDescriptor.payload as String
+                            ) { jsonData ->
+                                populateSpiciesList(
+                                    jsonData
+                                )
+                            })?.run {
+                                subsriber(
+                                    progress,
+                                    mRecyclerView,
+                                    compositeDisposable,
+                                    itemDescriptor.selector,
+                                    { container -> container.name },
+                                    this
+                                )
+                            }
+                            else -> printLog("item not handled")
+                        }
+                    }
+
+                    override fun onError(e: Throwable) {
+                    }
+
+                })
+        )
     }
 
     companion object {

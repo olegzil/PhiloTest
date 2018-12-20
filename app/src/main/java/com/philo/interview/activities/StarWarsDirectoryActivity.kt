@@ -6,6 +6,8 @@ import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
 import com.philo.interview.R
+import com.philo.interview.Server.NetworkServiceInitializer
+import com.philo.interview.Server.RetrofitNetworkService
 import com.philo.interview.fragments.StarWarsDirectoryFragment
 import kotlinx.android.synthetic.main.activity_item_detail.*
 import timber.log.Timber
@@ -17,6 +19,7 @@ import timber.log.Timber
  * in a [MainActivity].
  */
 class StarWarsDirectoryActivity : AppCompatActivity() {
+    private val server = RetrofitNetworkService(NetworkServiceInitializer("https://swapi.co/api/"))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

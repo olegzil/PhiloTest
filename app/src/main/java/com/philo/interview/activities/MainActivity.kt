@@ -18,7 +18,6 @@ import timber.log.Timber
 import timber.log.Timber.DebugTree
 
 val fragmentNotifier = PublishSubject.create<FragmentDescriptorData>()
-
 /**
  * An activity representing a list of Pings. This activity
  * has different presentations for handset and tablet-size devices. On
@@ -29,13 +28,6 @@ val fragmentNotifier = PublishSubject.create<FragmentDescriptorData>()
  */
 class MainActivity : AppCompatActivity() {
     private var compositeDisposable = CompositeDisposable()
-
-    /**
-     * Whether or not the activity is in two-pane mode, i.e. running on a tablet
-     * device.
-     */
-    private var twoPane: Boolean = false
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (BuildConfig.DEBUG)
@@ -46,7 +38,6 @@ class MainActivity : AppCompatActivity() {
             Timber.plant(NotLoggingTree())
 
         setContentView(R.layout.activity_item_list)
-
         setSupportActionBar(toolbar)
         toolbar.title = title
 
@@ -60,11 +51,10 @@ class MainActivity : AppCompatActivity() {
             // large-screen layouts (res/values-w900dp).
             // If this view is present, then the
             // activity should be in two-pane mode.
-            twoPane = true
-            startFragmentActivityBasedOnId(FragmentDescriptorData(StarWarsDirectoryActivity.activityId))
+            addFragmentBasedOnId(FragmentDescriptorData(StarWarsDirectoryFragment.fragmentId))
         }
         else
-            addFragmentBasedOnId(FragmentDescriptorData(StarWarsDirectoryFragment.fragmentId))
+            startFragmentActivityBasedOnId(FragmentDescriptorData(StarWarsDirectoryActivity.activityId))
         initiateNotificationMonitoring()
     }
 
@@ -99,7 +89,7 @@ class MainActivity : AppCompatActivity() {
                 supportFragmentManager
                     .beginTransaction()
                     .replace(
-                        R.id.item_detail_container,
+                        R.id.fragment_container,
                         StarWarsDirectoryFragment.newInstance(),
                         payLoad.id
                     )
@@ -110,8 +100,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun startFragmentActivityBasedOnId(payLoad: FragmentDescriptorData) {
         when (payLoad.id) {
-            StarWarsDirectoryFragment.fragmentId -> {
-                applicationContext.startActivity(Intent(applicationContext, StarWarsDirectoryActivity::class.java))
+            StarWarsDirectoryActivity.activityId -> {
+                val intent = Intent(applicationContext, StarWarsDirectoryActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                applicationContext.startActivity(intent)
             }
         }
     }
