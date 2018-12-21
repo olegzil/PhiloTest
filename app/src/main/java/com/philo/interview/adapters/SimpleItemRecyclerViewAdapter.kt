@@ -11,7 +11,7 @@ import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.item_list_content.view.*
 
 class SimpleItemRecyclerViewAdapter(
-    private val publishSubject: PublishSubject<ItemDetailDescriptor>
+    private val callback: PublishSubject<ItemDetailDescriptor>
 ) :
     RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.StarWarsNameHolder>(), RecyclerAdapterInterface<ItemDetailDescriptor> {
     private val values =  mutableListOf<ItemDetailDescriptor>()
@@ -37,7 +37,7 @@ class SimpleItemRecyclerViewAdapter(
         onClickListener = View.OnClickListener { theView ->
             val data = (theView.tag as ItemDetailDescriptor)
             val payload = theView.tag as ItemDetailDescriptor
-            publishSubject.onNext(payload)
+            callback.onNext(payload)
         }
     }
 

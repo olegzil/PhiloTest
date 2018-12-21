@@ -6,18 +6,16 @@ import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import com.philo.interview.BuildConfig
 import com.philo.interview.DataProviders.FragmentDescriptorData
+import com.philo.interview.DataProviders.ItemDetailDescriptor
 import com.philo.interview.Logging.NotLoggingTree
 import com.philo.interview.R
 import com.philo.interview.fragments.StarWarsDirectoryFragment
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.observers.DisposableObserver
-import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.activity_item_list.*
 import kotlinx.android.synthetic.main.item_list.*
 import timber.log.Timber
 import timber.log.Timber.DebugTree
 
-val fragmentNotifier = PublishSubject.create<FragmentDescriptorData>()
 /**
  * An activity representing a list of Pings. This activity
  * has different presentations for handset and tablet-size devices. On
@@ -45,17 +43,15 @@ class MainActivity : AppCompatActivity() {
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
         }
-
         if (item_detail_container != null) {
             // The detail container view will be present only in the
             // large-screen layouts (res/values-w900dp).
             // If this view is present, then the
             // activity should be in two-pane mode.
-            addFragmentBasedOnId(FragmentDescriptorData(StarWarsDirectoryFragment.fragmentId))
+            addFragmentBasedOnId(ItemDetailDescriptor(StarWarsDirectoryFragment.DIRECTORYDISPLAY, "", ""))
         }
         else
             startFragmentActivityBasedOnId(FragmentDescriptorData(StarWarsDirectoryActivity.activityId))
-        initiateNotificationMonitoring()
     }
 
     override fun onPause() {
@@ -63,40 +59,16 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
     }
 
-    private fun initiateNotificationMonitoring() {
-        compositeDisposable.add(fragmentNotifier.subscribeWith(object : DisposableObserver<FragmentDescriptorData>() {
-            override fun onComplete() {
-                // Do nothing
-            }
-
-            override fun onNext(payLoad: FragmentDescriptorData) =
-                if (item_detail_container != null)
-                    addFragmentBasedOnId(payLoad)
-                else {
-                    startFragmentActivityBasedOnId(payLoad)
-                }
-
-
-            override fun onError(e: Throwable) {
-                Timber.e(e)
-            }
-        }))
-    }
-
-    private fun addFragmentBasedOnId(payLoad: FragmentDescriptorData) {
-        when (payLoad.id) {
-            StarWarsDirectoryFragment.fragmentId -> {
+    private fun addFragmentBasedOnId(payLoad: ItemDetailDescriptor) {
                 supportFragmentManager
                     .beginTransaction()
                     .replace(
                         R.id.fragment_container,
-                        StarWarsDirectoryFragment.newInstance(),
-                        payLoad.id
+                        StarWarsDirectoryFragment.newInstance(payLoad),
+                        StarWarsDirectoryFragment.fragmentId
                     )
                     .commit()
             }
-        }
-    }
 
     private fun startFragmentActivityBasedOnId(payLoad: FragmentDescriptorData) {
         when (payLoad.id) {

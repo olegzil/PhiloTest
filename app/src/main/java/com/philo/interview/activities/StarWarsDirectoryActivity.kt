@@ -5,10 +5,13 @@ import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
+import com.philo.interview.DataProviders.ItemDetailDescriptor
 import com.philo.interview.R
-import com.philo.interview.Server.NetworkServiceInitializer
-import com.philo.interview.Server.RetrofitNetworkService
 import com.philo.interview.fragments.StarWarsDirectoryFragment
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.observers.DisposableObserver
+import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.activity_item_detail.*
 import timber.log.Timber
 
@@ -18,14 +21,15 @@ import timber.log.Timber
  * item details are presented side-by-side with a list of items
  * in a [MainActivity].
  */
-class StarWarsDirectoryActivity : AppCompatActivity() {
-    private val server = RetrofitNetworkService(NetworkServiceInitializer("https://swapi.co/api/"))
+val publisherAdapterToMain = PublishSubject.create<ItemDetailDescriptor>()
 
+class StarWarsDirectoryActivity : AppCompatActivity() {
+    val compositeDisposable = CompositeDisposable()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_item_detail)
         setSupportActionBar(detail_toolbar)
-
+        initiateNotificationMonitoring()
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own detail action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
@@ -34,15 +38,6 @@ class StarWarsDirectoryActivity : AppCompatActivity() {
         // Show the Up button in the action bar.
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        // savedInstanceState is non-null when there is fragment state
-        // saved from previous configurations of this activity
-        // (e.g. when rotating the screen from portrait to landscape).
-        // In this case, the fragment will automatically be re-added
-        // to its container so we don't need to manually add it.
-        // For more information, see the Fragments API guide at:
-        //
-        // http://developer.android.com/guide/components/fragments.html
-        //
         savedInstanceState?.let {
             Timber.i("saved sate present")
         } ?: let {
@@ -52,7 +47,7 @@ class StarWarsDirectoryActivity : AppCompatActivity() {
                 arguments = Bundle().apply {
                     putString(
                         StarWarsDirectoryFragment.fragmentId,
-                        intent.getStringExtra(StarWarsDirectoryFragment.fragmentId)
+                        intent.getStringExtra(StarWarsDirectoryFragment.DIRECTORYDISPLAY)
                     )
                 }
             }
@@ -60,6 +55,33 @@ class StarWarsDirectoryActivity : AppCompatActivity() {
                 .add(R.id.item_detail_container, fragment)
                 .commit()
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        compositeDisposable.clear()
+    }
+
+    private fun initiateNotificationMonitoring() {
+        compositeDisposable.add(publisherAdapterToMain
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeWith(object : DisposableObserver<ItemDetailDescriptor>() {
+            override fun onComplete() {
+                // Do nothing
+            }
+
+            override fun onNext(payLoad: ItemDetailDescriptor) {
+                supportFragmentManager
+                    .beginTransaction()
+                    .replace(R.id.item_detail_container, StarWarsDirectoryFragment.newInstance(payLoad))
+                    .addToBackStack(null)
+                    .commit()
+            }
+
+            override fun onError(e: Throwable) {
+                Timber.e(e)
+            }
+        }))
     }
 
     override fun onOptionsItemSelected(item: MenuItem) =
