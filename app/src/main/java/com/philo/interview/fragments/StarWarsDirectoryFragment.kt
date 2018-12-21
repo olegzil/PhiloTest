@@ -12,11 +12,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import com.philo.interview.DataProviders.ItemDetailDescriptor
+import com.philo.interview.DataProviders.StarWarsPerson
 import com.philo.interview.R
 import com.philo.interview.activities.publisherAdapterToMain
 import com.philo.interview.adapters.SimpleItemRecyclerViewAdapter
 import com.philo.interview.constants.SWAPI_ROOT
 import com.philo.interview.datacontrollers.RequestStarWarsDirectory
+import com.philo.interview.datacontrollers.StarWarsDetailGenerator
 import com.philo.interview.lambdas.subsriber
 import com.philo.interview.utilities.*
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -37,6 +39,7 @@ class StarWarsDirectoryFragment : Fragment() {
     private lateinit var mProgressBar: ProgressBar
     private var startupData = ItemDetailDescriptor(DIRECTORYDISPLAY, SWAPI_ROOT, "")
     val publisherFragmentToAdapter = PublishSubject.create<ItemDetailDescriptor>()
+    lateinit var theAdapter:SimpleItemRecyclerViewAdapter
 
     val progress: (Boolean) -> Unit = { flag ->
         mProgressBar.run {
@@ -69,7 +72,8 @@ class StarWarsDirectoryFragment : Fragment() {
             val mLayoutManager = LinearLayoutManager(context)
             mRecyclerView.layoutManager = mLayoutManager
             mRecyclerView.itemAnimator = DefaultItemAnimator()
-            mRecyclerView.adapter = SimpleItemRecyclerViewAdapter(publisherAdapterToMain)
+            theAdapter= SimpleItemRecyclerViewAdapter(publisherAdapterToMain)
+            mRecyclerView.adapter = theAdapter
             val divider = DividerItemDecoration(recyclerView.context, DividerItemDecoration.VERTICAL)
             divider.setDrawable(ContextCompat.getDrawable(context!!, R.drawable.custom_devider)!!)
             mRecyclerView.addItemDecoration(divider)
@@ -118,10 +122,23 @@ class StarWarsDirectoryFragment : Fragment() {
                                         mRecyclerView,
                                         compositeDisposable,
                                         STARWARSPERSONDETAIL,
-                                        { container -> container.name },
+                                        { container -> container.name},
                                         this
                                     )
                                 }
+                            STARWARSPERSONDETAIL -> {
+                                val detail = itemDescriptor.payload as StarWarsPerson
+                                val buffer = StringBuffer()
+                                buffer.append("Name: ${detail.name}\n" +
+                                        "Birth year: ${detail.birthYear}\n" +
+                                        "Eye color: ${detail.eyeColor}\n" +
+                                        "Gender: ${detail.gender}\n" +
+                                        "Hair color: ${detail.hairColor}\n" +
+                                        "Height: ${detail.height}\n" +
+                                        "Mass: ${detail.mass}\n" +
+                                        "Skin color: ${detail.skinColor}\n")
+                                StarWarsDetailGenerator(mRecyclerView.adapter as SimpleItemRecyclerViewAdapter, buffer.toString())
+                            }
                             STARWARSPLANETS -> (fetchJsonDataFromServerList(
                                 itemDescriptor.payload as String
                             ) { jsonData ->
@@ -213,6 +230,8 @@ class StarWarsDirectoryFragment : Fragment() {
         const val STARWARSDIRECTORYITEM: String = "STARWARSDIRECTORYITEM"
         const val STARWARSFILM: String = "STARWARSFILM"
         const val DIRECTORYDISPLAY: String = "DIRECTORYDISPLAY"
+        const val DETAILITEM:String="DETAILITEM"
+        const val DONOTDISPLAY:String ="DONOTDISPLAY"
         fun newInstance(startupData:ItemDetailDescriptor) : StarWarsDirectoryFragment{
             val retVal = StarWarsDirectoryFragment()
             retVal.startupData = startupData

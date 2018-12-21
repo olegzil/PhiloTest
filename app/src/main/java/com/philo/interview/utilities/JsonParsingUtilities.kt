@@ -176,14 +176,14 @@ fun populatePersonData(jsonArray: List<String>): List<StarWarsPerson>? {
                 workArea.add(
                     StarWarsPerson(
                         resultsArray.getJSONObject(index).optString("name", "not found"),
-                        resultsArray.getJSONObject(index).optInt("height", -1),
-                        resultsArray.getJSONObject(index).optInt("mass", -1),
-                        resultsArray.getJSONObject(index).optString("hairColor", "not found"),
-                        resultsArray.getJSONObject(index).optString("eyeColor", "not found"),
-                        resultsArray.getJSONObject(index).optString("birthYear", "not found"),
+                        resultsArray.getJSONObject(index).optString("height", "0"),
+                        resultsArray.getJSONObject(index).optString("mass", "0"),
+                        resultsArray.getJSONObject(index).optString("hair_color", "not found"),
+                        resultsArray.getJSONObject(index).optString("skin_color", "not found"),
+                        resultsArray.getJSONObject(index).optString("eye_color", "not found"),
+                        resultsArray.getJSONObject(index).optString("birth_year", "not found"),
                         resultsArray.getJSONObject(index).optString("gender", "not found"),
-                        resultsArray.getJSONObject(index).optString("homeworldUrl", "not found"),
-                        resultsArray.getJSONObject(index).optString("mass", "not found")
+                        resultsArray.getJSONObject(index).optString("homeworldUrl", "not found")
                     )
                 )
             }
