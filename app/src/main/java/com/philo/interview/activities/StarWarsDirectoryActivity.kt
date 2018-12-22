@@ -1,6 +1,5 @@
 package com.philo.interview.activities
 
-import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
@@ -87,8 +86,7 @@ class StarWarsDirectoryActivity : AppCompatActivity() {
                 // more details, see the Navigation pattern on Android Design:
                 //
                 // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-
-                navigateUpTo(Intent(this, MainActivity::class.java))
+                onBackPressed()
                 true
             }
             else -> super.onOptionsItemSelected(item)

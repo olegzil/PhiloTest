@@ -63,7 +63,7 @@ class StarWarsDirectoryFragment : Fragment() {
             }
         }
     }
-    val search:(Boolean) -> Unit = {flag ->
+    val search: (Boolean) -> Unit = { flag ->
         if (flag)
             searchButton.visibility = View.VISIBLE
         else
@@ -108,7 +108,8 @@ class StarWarsDirectoryFragment : Fragment() {
         }
     }
 
-    private fun searchAndDisplay(searchString: String) {
+    private fun searchAndDisplay(theText: String) {
+        val searchString = theText.trimStart().trimEnd()
         val root = "https://swapi.co/api/people/"
         progress(true)
         search(false)
@@ -117,10 +118,10 @@ class StarWarsDirectoryFragment : Fragment() {
                 compositeDisposable.add(
                     flatMap { jsonData ->
                         val result = parseHeader(jsonData, searchString)
-                        if ( result == null)
+                        if (result == null)
                             RetrofitNetworkService(NetworkServiceInitializer(root)).getApi()
                                 ?.fetchData(" ")
-                                ?.flatMap {rawJson->
+                                ?.flatMap { rawJson ->
 
                                     Single.just<Pair<String, Boolean>>(Pair(rawJson, false))
                                 }
@@ -238,7 +239,7 @@ class StarWarsDirectoryFragment : Fragment() {
 
                     override fun onNext(itemDescriptor: ItemDetailDescriptor) {
                         when (itemDescriptor.selector) {
-                            STARWARSPERSONS ->
+                            STARWARSPERSONS -> {
                                 (fetchJsonDataFromServerList(itemDescriptor.payload as String) { jsonData ->
                                     populatePersonData(jsonData)
                                 })?.run {
@@ -251,7 +252,8 @@ class StarWarsDirectoryFragment : Fragment() {
                                         this
                                     )
                                 }
-                            STARWARSFILM ->
+                            }
+                            STARWARSFILM -> {
                                 (fetchJsonDataFromServerList(itemDescriptor.payload as String) { jsonData ->
                                     populateEpisodeData(jsonData)
                                 })?.run {
@@ -264,7 +266,8 @@ class StarWarsDirectoryFragment : Fragment() {
                                         this
                                     )
                                 }
-                            STARWARSFILMSDETAIL ->{
+                            }
+                            STARWARSFILMSDETAIL -> {
                                 val detail = itemDescriptor.payload as StarWarsEpisode
                                 val buffer = StringBuffer()
                                 buffer.append(
@@ -300,21 +303,23 @@ class StarWarsDirectoryFragment : Fragment() {
                                     buffer.toString()
                                 )
                             }
-                            STARWARSPLANETS -> (fetchJsonDataFromServerList(
-                                itemDescriptor.payload as String
-                            ) { jsonData ->
-                                populatePlanetList(
-                                    jsonData
-                                )
-                            })?.run {
-                                subsriber(
-                                    progress,
-                                    mRecyclerView,
-                                    compositeDisposable,
-                                    DONOTDISPLAY,
-                                    { container -> container.name },
-                                    this
-                                )
+                            STARWARSPLANETS -> {
+                                (fetchJsonDataFromServerList(
+                                    itemDescriptor.payload as String
+                                ) { jsonData ->
+                                    populatePlanetList(
+                                        jsonData
+                                    )
+                                })?.run {
+                                    subsriber(
+                                        progress,
+                                        mRecyclerView,
+                                        compositeDisposable,
+                                        DONOTDISPLAY,
+                                        { container -> container.name },
+                                        this
+                                    )
+                                }
                             }
                             STARWARSSTARSHIPSDETAIL -> {
                                 val detail = itemDescriptor.payload as StarWarsStarships
@@ -339,53 +344,59 @@ class StarWarsDirectoryFragment : Fragment() {
                                     buffer.toString()
                                 )
                             }
-                            STARWARSSTARSHIPS -> (fetchJsonDataFromServerList(
-                                itemDescriptor.payload as String
-                            ) { jsonData ->
-                                populateStarshipData(
-                                    jsonData
-                                )
-                            })?.run {
-                                subsriber(
-                                    progress,
-                                    mRecyclerView,
-                                    compositeDisposable,
-                                    STARWARSSTARSHIPSDETAIL,
-                                    { container -> container.name },
-                                    this
-                                )
+                            STARWARSSTARSHIPS -> {
+                                (fetchJsonDataFromServerList(
+                                    itemDescriptor.payload as String
+                                ) { jsonData ->
+                                    populateStarshipData(
+                                        jsonData
+                                    )
+                                })?.run {
+                                    subsriber(
+                                        progress,
+                                        mRecyclerView,
+                                        compositeDisposable,
+                                        STARWARSSTARSHIPSDETAIL,
+                                        { container -> container.name },
+                                        this
+                                    )
+                                }
                             }
-                            STARWARSVEHICLES -> (fetchJsonDataFromServerList(
-                                itemDescriptor.payload as String
-                            ) { jsonData ->
-                                populateVehicleList(
-                                    jsonData
-                                )
-                            })?.run {
-                                subsriber(
-                                    progress,
-                                    mRecyclerView,
-                                    compositeDisposable,
-                                    DONOTDISPLAY,
-                                    { container -> container.name },
-                                    this
-                                )
+                            STARWARSVEHICLES -> {
+                                (fetchJsonDataFromServerList(
+                                    itemDescriptor.payload as String
+                                ) { jsonData ->
+                                    populateVehicleList(
+                                        jsonData
+                                    )
+                                })?.run {
+                                    subsriber(
+                                        progress,
+                                        mRecyclerView,
+                                        compositeDisposable,
+                                        DONOTDISPLAY,
+                                        { container -> container.name },
+                                        this
+                                    )
+                                }
                             }
-                            STRWARSSPECIES -> (fetchJsonDataFromServerList(
-                                itemDescriptor.payload as String
-                            ) { jsonData ->
-                                populateSpiciesList(
-                                    jsonData
-                                )
-                            })?.run {
-                                subsriber(
-                                    progress,
-                                    mRecyclerView,
-                                    compositeDisposable,
-                                    DONOTDISPLAY,
-                                    { container -> container.name },
-                                    this
-                                )
+                            STRWARSSPECIES -> {
+                                (fetchJsonDataFromServerList(
+                                    itemDescriptor.payload as String
+                                ) { jsonData ->
+                                    populateSpiciesList(
+                                        jsonData
+                                    )
+                                })?.run {
+                                    subsriber(
+                                        progress,
+                                        mRecyclerView,
+                                        compositeDisposable,
+                                        DONOTDISPLAY,
+                                        { container -> container.name },
+                                        this
+                                    )
+                                }
                             }
                             DIRECTORYDISPLAY -> {
                                 displayDirectory()
