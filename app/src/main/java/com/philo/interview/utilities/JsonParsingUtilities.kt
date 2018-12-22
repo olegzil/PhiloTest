@@ -59,16 +59,29 @@ fun <R> fetchJsonDataFromServerList(
                     ?.fetchData(url)
             }
                 .flatMap { jsonString ->
-                    val arrayOfItems = mutableListOf<String>()
                     var nextPage: String = JSONObject(jsonString).optString("next", "*")
+                    if (nextPage != "*" && nextPage != "null") {
+                        nextPage = nextPage.split("&dummy")[0]
+                        val results = Pair(nextPage, jsonString)
+                        Single.just(results)
+                    } else {
+                        val results = Pair("null", jsonString)
+                        Single.just(results)
+                    }
+                }
+                .flatMap { priorResult ->
+
+                    var nextPage = priorResult.first
+                    val arrayOfItems = mutableListOf<String>()
+                    arrayOfItems.add(priorResult.second)
                     while (nextPage != "*" && nextPage != "null") {
                         RetrofitNetworkService(NetworkServiceInitializer(nextPage)).getApi()
                             ?.fetchData(nextPage)
                             ?.blockingGet()
                             ?.let { receivedString ->
-                                nextPage = JSONObject(receivedString).optString("next", null)
-                                if (nextPage.length > "next".length) {
-                                    arrayOfItems.add(receivedString)
+                                nextPage = JSONObject(receivedString).optString("next", "null")
+                                arrayOfItems.add(receivedString)
+                                if (nextPage != "null") {
                                     nextPage = nextPage.split("&dummy")[0]
                                 }
                             } ?: run {
@@ -231,7 +244,35 @@ fun populateStarshipData(jsonList: List<String>): List<StarWarsStarships>? {
     }
 }
 
-fun populateDirecotry(jsonString: String): StarWarsDirectoryItem? {
+fun populateEpisodeData(jsonList: List<String>): List<StarWarsEpisode>? {
+    var retVal: List<StarWarsEpisode>? = null
+    val workArea = mutableListOf<StarWarsEpisode>()
+    try {
+        jsonList.forEach { jsonString ->
+            val jsonObject = JSONObject(jsonString)
+            val jsonArray = jsonObject.getJSONArray(results)
+            for (index in 0 until jsonArray.length()) {
+                workArea.add(
+                    StarWarsEpisode(
+                        jsonArray.getJSONObject(index).optString("title", "not found"),
+                        jsonArray.getJSONObject(index).optString("episode_id", "not found"),
+                        jsonArray.getJSONObject(index).optString("opening_crawl", "not found"),
+                        jsonArray.getJSONObject(index).optString("director", "not found"),
+                        jsonArray.getJSONObject(index).optString("producer", "not found"),
+                        jsonArray.getJSONObject(index).optString("release_date", "not found")
+                    )
+                )
+            }
+        }
+        retVal = workArea
+    } catch (e: JSONException) {
+        Timber.e(e)
+    } finally {
+        return retVal
+    }
+}
+
+fun populateDirectory(jsonString: String): StarWarsDirectoryItem? {
     var retVal: StarWarsDirectoryItem? = null
     try {
         val jsonObject = JSONObject(jsonString)

@@ -64,8 +64,8 @@ data class StarWarsStarships(
 )
 
 data class StarWarsEpisode(
-    val title: String,
-    val episodeId: Int,
+    val name: String,
+    val episodeId: String,
     val openingCrawl: String,
     val director: String,
     val producer: String,

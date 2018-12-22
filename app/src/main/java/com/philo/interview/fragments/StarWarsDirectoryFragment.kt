@@ -16,6 +16,7 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.Toast
 import com.philo.interview.DataProviders.ItemDetailDescriptor
+import com.philo.interview.DataProviders.StarWarsEpisode
 import com.philo.interview.DataProviders.StarWarsPerson
 import com.philo.interview.DataProviders.StarWarsStarships
 import com.philo.interview.R
@@ -217,7 +218,7 @@ class StarWarsDirectoryFragment : Fragment() {
     }
 
     private fun displayDirectory() {
-        (fetchJsonDataFromServerItem(SWAPI_ROOT) { jsonData -> populateDirecotry(jsonData) })?.run {
+        (fetchJsonDataFromServerItem(SWAPI_ROOT) { jsonData -> populateDirectory(jsonData) })?.run {
             compositeDisposable.add(
                 subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
@@ -250,6 +251,37 @@ class StarWarsDirectoryFragment : Fragment() {
                                         this
                                     )
                                 }
+                            STARWARSFILM ->
+                                (fetchJsonDataFromServerList(itemDescriptor.payload as String) { jsonData ->
+                                    populateEpisodeData(jsonData)
+                                })?.run {
+                                    subsriber(
+                                        progress,
+                                        mRecyclerView,
+                                        compositeDisposable,
+                                        STARWARSFILMSDETAIL,
+                                        { container -> container.name },
+                                        this
+                                    )
+                                }
+                            STARWARSFILMSDETAIL ->{
+                                val detail = itemDescriptor.payload as StarWarsEpisode
+                                val buffer = StringBuffer()
+                                buffer.append(
+                                    "Name: ${detail.name}\n" +
+                                            "Directory: ${detail.director}\n" +
+                                            "Episode ID: ${detail.episodeId}\n" +
+                                            "Title: ${detail.name}\n" +
+                                            "Crawl: ${detail.openingCrawl}\n" +
+                                            "Producer: ${detail.producer}\n" +
+                                            "Release date: ${detail.releaseDate}\n"
+                                )
+                                StarWarsDetailGenerator(
+                                    mRecyclerView.adapter as SimpleItemRecyclerViewAdapter,
+                                    buffer.toString()
+                                )
+                            }
+
                             STARWARSPERSONDETAIL -> {
                                 val detail = itemDescriptor.payload as StarWarsPerson
                                 val buffer = StringBuffer()
@@ -371,6 +403,7 @@ class StarWarsDirectoryFragment : Fragment() {
 
     companion object {
         const val fragmentId = "bd20fdb5-b0be-4c50-909e-99b6e6b290fe"
+        const val STARWARSFILMSDETAIL: String = "STARWARSFILMS"
         const val STRWARSSPECIES: String = "STRWARSSPECIES"
         const val STARWARSSPECIESDETAIL: String = "STARWARSSPECIESDETAIL"
         const val STARWARSVEHICLES: String = "STARWARSVEHICLES"
