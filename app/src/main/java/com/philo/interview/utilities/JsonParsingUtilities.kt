@@ -249,3 +249,39 @@ fun populateDirecotry(jsonString: String): StarWarsDirectoryItem? {
         return retVal
     }
 }
+
+fun parseHeader(jsonString: String, targetName: String): String? {
+    var retVal: String? = null
+    try {
+        val jsonObject = JSONObject(jsonString)
+        val count = jsonObject.optInt("count", 0)
+        if (count != 0) {
+            val jsonArray = jsonObject.getJSONArray(results)
+            val buffer = StringBuffer()
+            for (index in 0 until jsonArray.length()) {
+
+                val member = jsonArray.getJSONObject(index)
+                val target = member.optString("name", "*")
+                if (target == "*")
+                    continue
+                if (target.contains(targetName, true)) {
+                    buffer.append("My name is ")
+                    buffer.append(member.optString("name", "I have no name"))
+                    buffer.append("\n")
+                    buffer.append("I weigh ")
+                    buffer.append(member.optString("mass", " a ton"))
+                    buffer.append("\n")
+                    buffer.append("My eye color is ")
+                    buffer.append(member.optString("eye_color", "I have no eyes"))
+                    buffer.append("\n")
+                    buffer.append("My gender is ")
+                    buffer.append(member.optString("gender", "I have no gender"))
+                }
+            }
+            if (!buffer.isEmpty())
+                retVal = buffer.toString()
+        }
+    } finally {
+        return retVal
+    }
+}

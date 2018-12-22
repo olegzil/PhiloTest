@@ -24,5 +24,23 @@
             android:max="100"
             android:backgroundTint="@color/transparentWhite"
             android:indeterminateTint="#1a09d6"/>
-
+        <android.support.design.widget.FloatingActionButton
+                android:id="@+id/fab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_margin="@dimen/fab_margin"
+                app:srcCompat="@android:drawable/stat_notify_chat"
+                app:layout_anchor="@+id/item_detail_container"
+                app:layout_anchorGravity="top|end"/>
+        <EditText
+                android:id="@+id/input_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:hint="enter search string"
+                android:imeOptions="actionDone"
+                android:ems="10"
+                android:visibility="gone"
+        />
 </FrameLayout>

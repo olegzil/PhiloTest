@@ -3,7 +3,7 @@ package com.philo.interview.datacontrollers
 import com.philo.interview.DataProviders.ItemDetailDescriptor
 import com.philo.interview.DataProviders.StarWarsDirectoryItem
 import com.philo.interview.adapters.SimpleItemRecyclerViewAdapter
-import com.philo.interview.fragments.StarWarsDirectoryFragment.Companion.DETAILITEM
+import com.philo.interview.fragments.StarWarsDirectoryFragment.Companion.DONOTDISPLAY
 import com.philo.interview.fragments.StarWarsDirectoryFragment.Companion.STARWARSFILM
 import com.philo.interview.fragments.StarWarsDirectoryFragment.Companion.STARWARSPERSONS
 import com.philo.interview.fragments.StarWarsDirectoryFragment.Companion.STARWARSPLANETS
@@ -47,7 +47,7 @@ class StarWarsDetailGenerator(private val adapter: SimpleItemRecyclerViewAdapter
             if (item.isNotEmpty())
                 entries.add(
                     ItemDetailDescriptor(
-                        DETAILITEM,
+                        DONOTDISPLAY,
                         item,
                         ""
                     )

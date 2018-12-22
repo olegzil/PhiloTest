@@ -2,7 +2,6 @@ package com.philo.interview.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import com.philo.interview.BuildConfig
 import com.philo.interview.DataProviders.FragmentDescriptorData
@@ -38,11 +37,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_item_list)
         setSupportActionBar(toolbar)
         toolbar.title = title
-
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show()
-        }
         if (item_detail_container != null) {
             // The detail container view will be present only in the
             // large-screen layouts (res/values-w900dp).
